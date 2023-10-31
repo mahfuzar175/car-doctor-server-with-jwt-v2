@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -15,6 +16,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -30,6 +32,20 @@ const client = new MongoClient(uri, {
 });
 
 
+// middlewares
+const logger = (req, res, next) =>{
+  console.log('log: info', req.method, req.url);
+  next();
+}
+
+// =varify token=
+const varifyToken = (req, res, next) =>{
+  const token = req.cookies?.token;
+  console.log('token in the middleware:', token);
+  next();
+}
+
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -39,7 +55,7 @@ async function run() {
     const bookingCollection = client.db('carDoctor').collection('bookings');
 
     // auth related api
-    app.post('/jwt', async(req, res) => {
+    app.post('/jwt', logger, async(req, res) => {
       const user = req.body;
       console.log('user for token', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
@@ -79,9 +95,9 @@ async function run() {
         res.send(result)
     })
 
-    app.get('/bookings', async(req, res) =>{
+    app.get('/bookings', logger, varifyToken, async(req, res) =>{
       console.log(req.query.email); 
-
+      // console.log('cok cok', req.cookies);
       let query = {};
       if(req.query?.email){
         query = {email: req.query.email}

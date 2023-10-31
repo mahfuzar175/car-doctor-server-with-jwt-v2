@@ -24,3 +24,13 @@
  * 
  * 
  */
+
+/**
+ * 1. for secure api calls
+ * 2. serverside: install cookie parser and use as a middleware
+ * 3. req.cookies
+ * 4. on the client side: make api call using axios withCredentials: true or (credentials: 'include'while using fetch)
+ * 5. 
+ * 
+ * 
+ */
