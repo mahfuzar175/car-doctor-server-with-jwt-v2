@@ -38,11 +38,22 @@ const logger = (req, res, next) =>{
   next();
 }
 
-// =varify token=
-const varifyToken = (req, res, next) =>{
+// =verify token=
+const verifyToken = (req, res, next) =>{
   const token = req.cookies?.token;
-  console.log('token in the middleware:', token);
-  next();
+  // console.log('token in the middleware:', token);
+  // no token available
+  if(!token){
+    return res.status(401).send({message: 'unauthorized access'})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
+    if(err){
+      return res.status(401).send({message: 'unauthorized access'})
+    }
+    req.user = decoded;
+    next();
+  })
+
 }
 
 
@@ -95,9 +106,12 @@ async function run() {
         res.send(result)
     })
 
-    app.get('/bookings', logger, varifyToken, async(req, res) =>{
+    app.get('/bookings', logger, verifyToken, async(req, res) =>{
       console.log(req.query.email); 
-      // console.log('cok cok', req.cookies);
+      console.log('token owner info: ', req.user);
+      if(req.user.email !== req.query.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
       let query = {};
       if(req.query?.email){
         query = {email: req.query.email}
